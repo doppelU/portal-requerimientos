@@ -19,6 +19,14 @@ app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-key-cambiar-en-produc
 # Necesario para que Flask detecte HTTPS correctamente detrás de Cloud Run
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
+# Configuración de cookies de sesión para Cloud Run
+app.config.update(
+    SESSION_COOKIE_SECURE=True,        # Solo HTTPS en producción
+    SESSION_COOKIE_HTTPONLY=True,      # No accesible desde JS
+    SESSION_COOKIE_SAMESITE="Lax",     # Protección CSRF básica
+    PERMANENT_SESSION_LIFETIME=3600,   # Sesión dura 1 hora
+)
+
 # ---------------------------------------------------------------------------
 # CONFIG
 # ---------------------------------------------------------------------------
@@ -175,6 +183,7 @@ def login_google():
         hd=ALLOWED_DOMAIN,
     )
     session["oauth_state"] = state
+    print(f"[LOGIN] Redirigiendo a Google OAuth, state={state}")
     return redirect(authorization_url)
 
 @app.route("/callback")
@@ -182,9 +191,13 @@ def callback():
     try:
         os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
 
+        state_recibido = request.args.get("state")
+        print(f"[CALLBACK] state recibido={state_recibido}")
+        print(f"[CALLBACK] IS_PRODUCTION={IS_PRODUCTION}")
+        print(f"[CALLBACK] callback_url={get_callback_url()}")
+
         # Tomar el state directamente de la URL del callback
-        # Esto resuelve el problema de múltiples instancias en Cloud Run
-        # donde la sesión con el state puede estar en otra instancia
+        # Resuelve el problema de múltiples instancias en Cloud Run
         flow = Flow.from_client_config(
             {
                 "web": {
@@ -196,40 +209,47 @@ def callback():
                 }
             },
             scopes=SCOPES,
-            state=request.args.get("state"),
+            state=state_recibido,
         )
         flow.redirect_uri = get_callback_url()
 
         # En Cloud Run el request llega como http:// por el proxy interno
         # pero el redirect_uri registrado en Google es https://
-        # así que corregimos la URL antes de intercambiar el código
         auth_response = request.url
+        print(f"[CALLBACK] auth_response original={auth_response[:80]}")
         if IS_PRODUCTION and auth_response.startswith("http://"):
             auth_response = auth_response.replace("http://", "https://", 1)
+            print(f"[CALLBACK] auth_response corregido={auth_response[:80]}")
 
         flow.fetch_token(authorization_response=auth_response)
-        credentials = flow.credentials
+        print("[CALLBACK] Token obtenido correctamente")
 
+        credentials = flow.credentials
         id_info = id_token.verify_oauth2_token(
             credentials.id_token,
             google_requests.Request(),
             GOOGLE_CLIENT_ID,
         )
+        print(f"[CALLBACK] id_info obtenido, email={id_info.get('email')}")
 
         email = id_info.get("email", "")
         if not email.endswith(f"@{ALLOWED_DOMAIN}"):
+            print(f"[CALLBACK] Dominio no permitido: {email}")
             return render_template("login.html", error="Solo se permiten cuentas @sip.cl")
 
+        # Sesión permanente para que persista entre requests
+        session.permanent = True
         session["user"] = {
             "email": email,
             "name": id_info.get("name", email.split("@")[0]),
             "picture": id_info.get("picture", ""),
             "colegios": [],
         }
+        print(f"[OK] Sesión creada para {email}, redirigiendo a /categories")
         return redirect(url_for("categories"))
 
     except Exception as e:
-        print(f"[ERROR] OAuth callback: {e}")
+        print(f"[ERROR] OAuth callback falló: {e}")
         print(traceback.format_exc())
         return render_template("login.html", error="Error al iniciar sesión. Intenta nuevamente.")
 
@@ -244,6 +264,7 @@ def logout():
 @app.route("/categories")
 def categories():
     if "user" not in session:
+        print("[WARN] /categories sin sesión, redirigiendo a login")
         return redirect(url_for("login"))
     return render_template("categories.html", user=session["user"])
 
