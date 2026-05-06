@@ -179,8 +179,7 @@ def login_google():
     flow.redirect_uri = get_callback_url()
     authorization_url, state = flow.authorization_url(
         access_type="offline",
-        include_granted_scopes="true",
-        hd=ALLOWED_DOMAIN,
+        hd=ALLOWED_DOMAIN,  # ← sacamos include_granted_scopes
     )
     session["oauth_state"] = state
     print(f"[LOGIN] Redirigiendo a Google OAuth, state={state}")
