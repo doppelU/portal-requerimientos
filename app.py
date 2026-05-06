@@ -126,13 +126,7 @@ def get_callback_url():
         return url_for("callback", _external=True, _scheme="https")
     return url_for("callback", _external=True)
 
-def make_flow(state=None):
-    """
-    Crea el flow OAuth2.
-    code_verifier=None desactiva PKCE explícitamente —
-    Google lo activa automáticamente en clientes nuevos pero
-    nuestro backend no puede mantener el verifier entre requests.
-    """
+def make_flow(state=None, code_verifier=None):
     kwargs = {"scopes": SCOPES}
     if state:
         kwargs["state"] = state
@@ -149,8 +143,12 @@ def make_flow(state=None):
         },
         **kwargs,
     )
-    # Desactivar PKCE explícitamente
-    flow.code_verifier = None
+
+    # Si se pasa un code_verifier existente, restaurarlo (callback)
+    # Si no, el flow generará uno nuevo automáticamente (login)
+    if code_verifier is not None:
+        flow.code_verifier = code_verifier
+
     return flow
 
 # ---------------------------------------------------------------------------
@@ -176,10 +174,13 @@ def login_google():
         access_type="offline",
         hd=ALLOWED_DOMAIN,
         prompt="select_account",
-        code_challenge_method=False,  # Desactivar PKCE en la URL de autorización
     )
-    session["oauth_state"] = state
-    print(f"[LOGIN] state={state} callback_url={get_callback_url()}")
+    # Guardar state Y code_verifier en sesión para usarlos en el callback
+    session.permanent = True
+    session["oauth_state"]    = state
+    session["code_verifier"]  = flow.code_verifier
+    print(f"[LOGIN] state={state}")
+    print(f"[LOGIN] code_verifier={'presente' if flow.code_verifier else 'ausente'}")
     return redirect(authorization_url)
 
 @app.route("/callback")
@@ -187,14 +188,18 @@ def callback():
     try:
         os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
 
-        state = request.args.get("state")
-        code  = request.args.get("code")
+        state         = request.args.get("state")
+        code          = request.args.get("code")
+        code_verifier = session.get("code_verifier")
+
         print(f"[CALLBACK] state={state}")
         print(f"[CALLBACK] code presente={'si' if code else 'NO'}")
+        print(f"[CALLBACK] code_verifier en sesión={'presente' if code_verifier else 'AUSENTE'}")
         print(f"[CALLBACK] IS_PRODUCTION={IS_PRODUCTION}")
         print(f"[CALLBACK] callback_url={get_callback_url()}")
 
-        flow = make_flow(state=state)
+        # Restaurar el flow con el state y code_verifier de la sesión
+        flow = make_flow(state=state, code_verifier=code_verifier)
         flow.redirect_uri = get_callback_url()
 
         # Reconstruir auth_response con query_string exacto
@@ -234,6 +239,10 @@ def callback():
             "picture": id_info.get("picture", ""),
             "colegios": [],
         }
+        # Limpiar datos OAuth de la sesión
+        session.pop("oauth_state", None)
+        session.pop("code_verifier", None)
+
         print(f"[OK] Sesión creada para {email}")
         return redirect(url_for("categories"))
 
