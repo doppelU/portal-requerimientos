@@ -214,14 +214,8 @@ def callback():
 
         # En Cloud Run el request llega como http:// por el proxy interno
         # pero el redirect_uri registrado en Google es https://
-        auth_response = request.url
-        print(f"[CALLBACK] auth_response original={auth_response[:80]}")
-        if IS_PRODUCTION and auth_response.startswith("http://"):
-            auth_response = auth_response.replace("http://", "https://", 1)
-            print(f"[CALLBACK] auth_response corregido={auth_response[:80]}")
-
-        flow.fetch_token(authorization_response=auth_response)
-        print("[CALLBACK] Token obtenido correctamente")
+        auth_response = get_callback_url() + "?" + request.query_string.decode("utf-8")
+        print(f"[CALLBACK] auth_response reconstruida={auth_response[:150]}")
 
         credentials = flow.credentials
         id_info = id_token.verify_oauth2_token(
