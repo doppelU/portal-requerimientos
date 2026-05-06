@@ -21,10 +21,10 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Configuración de cookies de sesión para Cloud Run
 app.config.update(
-    SESSION_COOKIE_SECURE=True,        # Solo HTTPS en producción
-    SESSION_COOKIE_HTTPONLY=True,      # No accesible desde JS
-    SESSION_COOKIE_SAMESITE="Lax",     # Protección CSRF básica
-    PERMANENT_SESSION_LIFETIME=3600,   # Sesión dura 1 hora
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    PERMANENT_SESSION_LIFETIME=3600,
 )
 
 # ---------------------------------------------------------------------------
@@ -36,7 +36,6 @@ FRESHDESK_API_KEY    = os.getenv("FRESHDESK_API_KEY", "")
 FRESHDESK_SUBDOMAIN  = os.getenv("FRESHDESK_SUBDOMAIN", "sip")
 ALLOWED_DOMAIN       = "sip.cl"
 
-# Cloud Run siempre define K_SERVICE — usamos esto para detectar producción
 IS_PRODUCTION = os.getenv("K_SERVICE") is not None
 
 SCOPES = [
@@ -120,32 +119,31 @@ SISTEMAS = {
 # ---------------------------------------------------------------------------
 # HELPERS
 # ---------------------------------------------------------------------------
-def get_ou_from_path(ou_path: str) -> str:
-    if not ou_path:
-        return ""
-    parts = [p for p in ou_path.strip("/").split("/") if p]
-    for part in parts:
-        if part in OU_TO_COLEGIO:
-            return part
-    return ""
-
-def get_colegios_for_user(ou_path: str) -> list:
-    ou = get_ou_from_path(ou_path)
-    return OU_TO_COLEGIO.get(ou, [])
-
 def freshdesk_headers():
     token = base64.b64encode(f"{FRESHDESK_API_KEY}:X".encode()).decode()
     return {"Authorization": f"Basic {token}", "Content-Type": "application/json"}
 
 def get_callback_url():
-    """
-    Retorna la URL de callback correcta según el entorno.
-    En producción (Cloud Run) siempre usa https://.
-    En local usa http://.
-    """
     if IS_PRODUCTION:
         return url_for("callback", _external=True, _scheme="https")
     return url_for("callback", _external=True)
+
+def make_flow(state=None):
+    kwargs = {"scopes": SCOPES}
+    if state:
+        kwargs["state"] = state
+    return Flow.from_client_config(
+        {
+            "web": {
+                "client_id": GOOGLE_CLIENT_ID,
+                "client_secret": GOOGLE_CLIENT_SECRET,
+                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+                "token_uri": "https://oauth2.googleapis.com/token",
+                "redirect_uris": [get_callback_url()],
+            }
+        },
+        **kwargs,
+    )
 
 # ---------------------------------------------------------------------------
 # AUTH
@@ -164,25 +162,15 @@ def login():
 
 @app.route("/login/google")
 def login_google():
-    flow = Flow.from_client_config(
-        {
-            "web": {
-                "client_id": GOOGLE_CLIENT_ID,
-                "client_secret": GOOGLE_CLIENT_SECRET,
-                "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": [get_callback_url()],
-            }
-        },
-        scopes=SCOPES,
-    )
+    flow = make_flow()
     flow.redirect_uri = get_callback_url()
     authorization_url, state = flow.authorization_url(
         access_type="offline",
-        hd=ALLOWED_DOMAIN,  # ← sacamos include_granted_scopes
+        hd=ALLOWED_DOMAIN,
+        prompt="select_account",
     )
     session["oauth_state"] = state
-    print(f"[LOGIN] Redirigiendo a Google OAuth, state={state}")
+    print(f"[LOGIN] state={state} callback_url={get_callback_url()}")
     return redirect(authorization_url)
 
 @app.route("/callback")
@@ -190,47 +178,46 @@ def callback():
     try:
         os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
 
-        state_recibido = request.args.get("state")
-        print(f"[CALLBACK] state recibido={state_recibido}")
+        state = request.args.get("state")
+        code  = request.args.get("code")
+        print(f"[CALLBACK] state={state}")
+        print(f"[CALLBACK] code presente={'si' if code else 'NO'}")
         print(f"[CALLBACK] IS_PRODUCTION={IS_PRODUCTION}")
         print(f"[CALLBACK] callback_url={get_callback_url()}")
 
-        # Tomar el state directamente de la URL del callback
-        # Resuelve el problema de múltiples instancias en Cloud Run
-        flow = Flow.from_client_config(
-            {
-                "web": {
-                    "client_id": GOOGLE_CLIENT_ID,
-                    "client_secret": GOOGLE_CLIENT_SECRET,
-                    "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-                    "token_uri": "https://oauth2.googleapis.com/token",
-                    "redirect_uris": [get_callback_url()],
-                }
-            },
-            scopes=SCOPES,
-            state=state_recibido,
-        )
+        flow = make_flow(state=state)
         flow.redirect_uri = get_callback_url()
 
-        # En Cloud Run el request llega como http:// por el proxy interno
-        # pero el redirect_uri registrado en Google es https://
+        # Reconstruir auth_response con query_string exacto
         auth_response = get_callback_url() + "?" + request.query_string.decode("utf-8")
-        print(f"[CALLBACK] auth_response reconstruida={auth_response[:150]}")
+        print(f"[CALLBACK] auth_response={auth_response[:200]}")
+
+        try:
+            flow.fetch_token(authorization_response=auth_response)
+            print("[CALLBACK] fetch_token OK")
+        except Exception as token_err:
+            print(f"[ERROR] fetch_token falló: {token_err}")
+            print(traceback.format_exc())
+            raise
 
         credentials = flow.credentials
+        if not credentials or not credentials.token:
+            raise Exception("credentials vacías después de fetch_token")
+
+        print(f"[CALLBACK] token obtenido OK")
+
         id_info = id_token.verify_oauth2_token(
             credentials.id_token,
             google_requests.Request(),
             GOOGLE_CLIENT_ID,
         )
-        print(f"[CALLBACK] id_info obtenido, email={id_info.get('email')}")
 
         email = id_info.get("email", "")
+        print(f"[CALLBACK] email={email}")
+
         if not email.endswith(f"@{ALLOWED_DOMAIN}"):
-            print(f"[CALLBACK] Dominio no permitido: {email}")
             return render_template("login.html", error="Solo se permiten cuentas @sip.cl")
 
-        # Sesión permanente para que persista entre requests
         session.permanent = True
         session["user"] = {
             "email": email,
@@ -238,7 +225,7 @@ def callback():
             "picture": id_info.get("picture", ""),
             "colegios": [],
         }
-        print(f"[OK] Sesión creada para {email}, redirigiendo a /categories")
+        print(f"[OK] Sesión creada para {email}")
         return redirect(url_for("categories"))
 
     except Exception as e:
@@ -257,7 +244,7 @@ def logout():
 @app.route("/categories")
 def categories():
     if "user" not in session:
-        print("[WARN] /categories sin sesión, redirigiendo a login")
+        print("[WARN] /categories sin sesión")
         return redirect(url_for("login"))
     return render_template("categories.html", user=session["user"])
 
@@ -393,9 +380,8 @@ def submit_general():
 
 # ---------------------------------------------------------------------------
 # ARRANQUE LOCAL
-# En Cloud Run este bloque es ignorado automáticamente.
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
-    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"  # solo desarrollo local
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
