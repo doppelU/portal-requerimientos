@@ -212,7 +212,9 @@ def callback():
         }
         return redirect(url_for("categories"))
     except Exception as e:
+        import traceback
         print(f"[ERROR] OAuth callback: {e}")
+        print(traceback.format_exc())
         return render_template("login.html", error="Error al iniciar sesión. Intenta nuevamente.")
  
 @app.route("/logout")
