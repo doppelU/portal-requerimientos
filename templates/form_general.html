@@ -1,0 +1,207 @@
+{% extends "layout.html" %}
+{% set active = 'crear' %}
+{% block title %}{{ titulo }} — Portal SIP{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="p-12 max-w-5xl mx-auto w-full">
+        <nav class="flex items-center gap-2 text-sm text-on-surface-variant font-semibold mb-8">
+            <a href="/categories" class="hover:text-primary transition-colors">Dashboard</a>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+            </svg>
+            <span class="text-primary font-bold">Nuevo Ticket</span>
+        </nav>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
+            <!-- Formulario -->
+            <div class="lg:col-span-8">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-primary mb-2">Nuevo Ticket: {{ titulo }}</h1>
+                    <p class="text-on-surface-variant">{{ subtitulo }}</p>
+                </div>
+
+                <div class="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+                    <div class="bg-surface-container-low px-6 py-4 border-b border-outline-variant">
+                        <span class="text-xs font-bold text-primary uppercase tracking-widest">Información del Caso</span>
+                    </div>
+
+                    <form id="form-general" action="/submit/general" method="POST" class="p-8 space-y-6">
+                        <input type="hidden" name="categoria" value="{{ categoria }}">
+
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-on-surface">SISTEMA</label>
+                            <select name="sistema" id="select-sistema" class="form-select" required>
+                                <option value="">Seleccione un sistema</option>
+                                {% for s in sistemas_filtrados %}
+                                <option value="{{ s }}">{{ s }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div id="div-tipo" class="space-y-2 hidden">
+                            <label class="block text-sm font-bold text-on-surface">TIPO DE REQUERIMIENTO</label>
+                            <select name="tipo" id="select-tipo" class="form-select" disabled>
+                                <option value="">Seleccione un tipo</option>
+                            </select>
+                        </div>
+
+                        <div id="div-detalle" class="space-y-2 hidden">
+                            <label class="block text-sm font-bold text-on-surface">DETALLE</label>
+                            <select name="detalle" id="select-detalle" class="form-select" disabled>
+                                <option value="">Seleccione un detalle</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-on-surface">ASUNTO</label>
+                            <input type="text" name="asunto" class="form-input"
+                                   placeholder="Ej. Falla en el inicio de sesión del sistema" required>
+                            <p class="text-xs italic text-on-surface-variant">Sea breve y descriptivo.</p>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-on-surface">DESCRIPCIÓN DEL PROBLEMA</label>
+                            <textarea name="descripcion" class="form-input resize-none" rows="5"
+                                      placeholder="Describa los pasos para reproducir el error, mensajes de error observados, etc." required></textarea>
+                        </div>
+
+                        <div class="pt-6 border-t border-outline-variant flex justify-end gap-4">
+                            <a href="/categories" class="btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn-primary" id="submit-btn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                </svg>
+                                Enviar Ticket
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Panel lateral -->
+            <div class="lg:col-span-4 space-y-6">
+                <div class="bg-white border border-outline-variant rounded-xl p-6 shadow-sm">
+                    <h3 class="text-xs font-bold text-primary uppercase tracking-widest mb-4">Estado del Servicio</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-green-500 pulse"></div>
+                                <span class="text-sm font-semibold">Red Institucional</span>
+                            </div>
+                            <span class="text-xs text-green-600 font-bold">OPERATIVO</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-green-500 pulse"></div>
+                                <span class="text-sm font-semibold">Servidores de Datos</span>
+                            </div>
+                            <span class="text-xs text-green-600 font-bold">OPERATIVO</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-primary-container rounded-xl p-6 shadow-lg relative overflow-hidden">
+                    <div class="relative z-10">
+                        <svg class="mb-4" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#7d98f6" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <h4 class="text-lg font-bold text-on-primary-container mb-2">Tiempo de Respuesta</h4>
+                        <p class="text-sm text-on-primary-container opacity-80 leading-relaxed">
+                            Evaluamos técnicos en menos de <span class="font-bold underline">2 horas hábiles</span>.
+                        </p>
+                    </div>
+                    <div class="absolute -right-6 -bottom-6 opacity-10">
+                        <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+                    <div class="px-4 py-3 bg-surface-container-low border-b border-outline-variant">
+                        <h3 class="text-xs font-bold text-primary uppercase tracking-widest">Preguntas Frecuentes</h3>
+                    </div>
+                    <div class="divide-y divide-outline-variant">
+                        <a href="https://sip.freshdesk.com/support/home" target="_blank" class="p-4 flex items-center justify-between hover:bg-surface-container-low cursor-pointer transition-colors group">
+                            <span class="text-sm font-semibold text-on-surface-variant">¿Cómo escalar un ticket?</span>
+                            <svg class="text-outline-variant group-hover:translate-x-1 transition-transform" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </a>
+                        <a href="https://sip.freshdesk.com/support/home" target="_blank" class="p-4 flex items-center justify-between hover:bg-surface-container-low cursor-pointer transition-colors group">
+                            <span class="text-sm font-semibold text-on-surface-variant">Tiempos de SLA</span>
+                            <svg class="text-outline-variant group-hover:translate-x-1 transition-transform" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const sistemasData = {{ sistemas_json | safe }};
+
+document.getElementById('select-sistema').addEventListener('change', function() {
+    const sistema = this.value;
+    const divTipo = document.getElementById('div-tipo');
+    const selectTipo = document.getElementById('select-tipo');
+    const divDetalle = document.getElementById('div-detalle');
+    const selectDetalle = document.getElementById('select-detalle');
+
+    selectTipo.innerHTML = '<option value="">Seleccione un tipo</option>';
+    selectDetalle.innerHTML = '<option value="">Seleccione un detalle</option>';
+    divDetalle.classList.add('hidden');
+    selectDetalle.disabled = true;
+
+    if (!sistema) { divTipo.classList.add('hidden'); selectTipo.disabled = true; return; }
+
+    const tipos = Object.keys(sistemasData[sistema] || {});
+    if (tipos.length > 0) {
+        tipos.forEach(t => {
+            const o = document.createElement('option');
+            o.value = t; o.textContent = t;
+            selectTipo.appendChild(o);
+        });
+        selectTipo.disabled = false;
+        divTipo.classList.remove('hidden');
+    } else {
+        divTipo.classList.add('hidden');
+        selectTipo.disabled = true;
+    }
+});
+
+document.getElementById('select-tipo').addEventListener('change', function() {
+    const sistema = document.getElementById('select-sistema').value;
+    const tipo = this.value;
+    const divDetalle = document.getElementById('div-detalle');
+    const selectDetalle = document.getElementById('select-detalle');
+
+    selectDetalle.innerHTML = '<option value="">Seleccione un detalle</option>';
+    const detalles = sistemasData[sistema]?.[tipo] || [];
+
+    if (detalles.length > 0) {
+        detalles.forEach(d => {
+            const o = document.createElement('option');
+            o.value = d; o.textContent = d;
+            selectDetalle.appendChild(o);
+        });
+        selectDetalle.disabled = false;
+        divDetalle.classList.remove('hidden');
+    } else {
+        divDetalle.classList.add('hidden');
+        selectDetalle.disabled = true;
+    }
+});
+
+document.getElementById('form-general').addEventListener('submit', function() {
+    const btn = document.getElementById('submit-btn');
+    btn.innerHTML = '<svg class="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Enviando...';
+    btn.disabled = true;
+});
+</script>
+{% endblock %}

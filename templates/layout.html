@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="min-h-screen flex">
+
+    <!-- Sidebar fijo -->
+    <aside class="fixed left-0 top-0 h-full w-64 bg-surface-container-low border-r border-outline-variant flex flex-col z-50">
+        <div class="h-24 flex items-center justify-center px-4 border-b border-outline-variant">
+            <a href="/categories">
+                <img src="{{ url_for('static', filename='logo_sip.png') }}"
+                     alt="SIP Red de Colegios"
+                     class="h-16 w-auto object-contain">
+            </a>
+        </div>
+
+        <nav class="flex-1 px-2 py-4 flex flex-col gap-1">
+            <a href="/categories" class="nav-item {% if active == 'dashboard' %}active{% endif %}">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                    <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+                </svg>
+                Dashboard
+            </a>
+            <a href="https://sip.freshdesk.com" target="_blank" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                </svg>
+                Historial de Tickets
+            </a>
+        </nav>
+
+        <div class="px-2 pb-4 border-t border-outline-variant pt-4 flex flex-col gap-1">
+            <a href="/logout" class="nav-item hover:!text-red-500 hover:!bg-red-50">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                </svg>
+                Cerrar Sesión
+            </a>
+        </div>
+    </aside>
+
+    <!-- Contenido principal -->
+    <div class="flex-1 ml-64 flex flex-col min-h-screen">
+        <header class="h-16 bg-white border-b border-outline-variant flex items-center justify-between px-8 sticky top-0 z-40">
+            <h1 class="text-xl font-bold text-primary">SIP Red de Colegios</h1>
+            <div class="flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                    {% if user.picture %}
+                    <img src="{{ user.picture }}" class="w-8 h-8 rounded-full" alt="{{ user.name }}">
+                    {% else %}
+                    <div class="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center text-sm font-bold">
+                        {{ user.name[0] | upper }}
+                    </div>
+                    {% endif %}
+                    <span class="text-sm font-semibold text-on-surface-variant">{{ user.name }}</span>
+                </div>
+            </div>
+        </header>
+
+        <div class="flex-1">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}

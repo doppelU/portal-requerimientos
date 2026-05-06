@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Portal de Requerimientos — SIP{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary:                  '#001957',
+                        'primary-container':      '#002b86',
+                        'on-primary':             '#ffffff',
+                        'on-primary-container':   '#7d98f6',
+                        secondary:                '#00687b',
+                        'secondary-container':    '#5adcfd',
+                        'on-secondary':           '#ffffff',
+                        'on-secondary-container': '#005f71',
+                        tertiary:                 '#480002',
+                        'tertiary-container':     '#700006',
+                        surface:                  '#faf8ff',
+                        'surface-container':      '#eaedff',
+                        'surface-container-low':  '#f2f3ff',
+                        'surface-container-high': '#e2e7ff',
+                        'surface-container-highest': '#dae1ff',
+                        'surface-container-lowest': '#ffffff',
+                        'on-surface':             '#001849',
+                        'on-surface-variant':     '#444652',
+                        outline:                  '#757683',
+                        'outline-variant':        '#c4c5d4',
+                    },
+                    fontFamily: {
+                        sans: ['"Public Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Public Sans', sans-serif; }
+        .fade-in { animation: fadeIn 0.35s ease forwards; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .nav-item {
+            display: flex; align-items: center; gap: 1rem;
+            padding: 0.5rem 1rem; border-radius: 0.5rem;
+            font-weight: 600; font-size: 0.875rem;
+            transition: all 0.15s ease; cursor: pointer;
+            color: #444652; text-decoration: none; width: 100%;
+        }
+        .nav-item:hover { background: #e2e7ff; }
+        .nav-item.active { background: #5adcfd; color: #005f71; }
+        .form-input {
+            width: 100%; padding: 0.75rem 1rem;
+            border: 1px solid #c4c5d4; border-radius: 0.5rem;
+            font-size: 0.9rem; color: #001849; background: #faf8ff;
+            outline: none; transition: all 0.15s ease;
+            font-family: 'Public Sans', sans-serif;
+        }
+        .form-input:focus { border-color: #001957; box-shadow: 0 0 0 2px rgba(0,25,87,0.15); }
+        .form-input.error { border-color: #dc2626; box-shadow: 0 0 0 2px rgba(220,38,38,0.15); }
+        .form-select {
+            width: 100%; padding: 0.75rem 2.5rem 0.75rem 1rem;
+            border: 1px solid #c4c5d4; border-radius: 0.5rem;
+            font-size: 0.9rem; color: #001849; background: #faf8ff;
+            outline: none; appearance: none; cursor: pointer;
+            transition: all 0.15s ease;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23757683'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1rem;
+            font-family: 'Public Sans', sans-serif;
+        }
+        .form-select:focus { border-color: #001957; box-shadow: 0 0 0 2px rgba(0,25,87,0.15); }
+        .form-select:disabled { background-color: #f2f3ff; color: #757683; cursor: not-allowed; }
+        .btn-primary {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.75rem 1.75rem; background: #001957; color: white;
+            font-weight: 700; border-radius: 0.75rem; border: none;
+            cursor: pointer; transition: all 0.2s ease; font-size: 0.9rem;
+            font-family: 'Public Sans', sans-serif;
+        }
+        .btn-primary:hover { background: #002b86; box-shadow: 0 4px 12px rgba(0,25,87,0.25); }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-secondary {
+            display: inline-flex; align-items: center; gap: 0.5rem;
+            padding: 0.75rem 1.75rem; background: white; color: #001957;
+            font-weight: 700; border-radius: 0.75rem;
+            border: 1px solid #c4c5d4; cursor: pointer;
+            transition: all 0.15s ease; font-size: 0.9rem;
+            font-family: 'Public Sans', sans-serif; text-decoration: none;
+        }
+        .btn-secondary:hover { background: #f2f3ff; }
+        .card {
+            background: white; border-radius: 0.75rem;
+            border: 1px solid #c4c5d4; box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .pulse { animation: pulse 2s infinite; }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-surface text-on-surface antialiased">
+{% block body %}{% endblock %}
+</body>
+</html>

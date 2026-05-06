@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Requerimiento Enviado — Portal SIP{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex items-center justify-center p-6 bg-surface">
+    <main class="max-w-2xl w-full text-center fade-in">
+
+        <div class="mb-10 flex justify-center">
+            <img src="{{ url_for('static', filename='logo_sip.png') }}"
+                 alt="SIP Red de Colegios"
+                 class="h-24 w-auto object-contain opacity-90">
+        </div>
+
+        <div class="mb-8 flex justify-center">
+            <div class="w-24 h-24 bg-green-500 text-white rounded-full flex items-center justify-center shadow-xl" style="box-shadow: 0 20px 40px rgba(34,197,94,0.3);">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+                    <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+                    <polyline points="22 4 12 14.01 9 11.01"/>
+                </svg>
+            </div>
+        </div>
+
+        <h1 class="text-4xl md:text-5xl font-bold text-primary mb-4 leading-tight">¡Ticket Enviado Exitosamente!</h1>
+        <p class="text-xl text-on-surface-variant max-w-lg mx-auto leading-relaxed">
+            Hemos recibido tu solicitud institucional.
+            {% if ticket_id %}
+            Tu número de ticket es <span class="font-bold text-primary">#{{ ticket_id }}</span>.
+            {% endif %}
+        </p>
+
+        <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <a href="/categories"
+               class="flex items-center justify-center gap-2 py-4 px-8 border border-outline-variant bg-white font-bold text-primary rounded-xl hover:bg-surface-container-low transition-all shadow-sm">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+                    <rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+                </svg>
+                Volver al Dashboard
+            </a>
+            <a href="/categories"
+               class="flex items-center justify-center gap-2 py-4 px-8 bg-primary font-bold text-white rounded-xl hover:bg-primary-container transition-all shadow-md group">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+                </svg>
+                Crear Otro Ticket
+                <svg class="group-hover:translate-x-1 transition-transform" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+
+        <div class="mt-16 pt-8 border-t border-outline-variant grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="flex flex-col items-center gap-2">
+                <div class="w-10 h-10 bg-surface-container-high rounded-full flex items-center justify-center text-on-surface-variant">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                </div>
+                <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wide">Confirmación</p>
+                <p class="text-xs text-outline font-semibold">Copia enviada al correo</p>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+                <div class="w-10 h-10 bg-surface-container-high rounded-full flex items-center justify-center text-on-surface-variant">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wide">Tiempo Estimado</p>
+                <p class="text-xs text-outline font-semibold">&lt; 2 horas hábiles</p>
+            </div>
+            <div class="flex flex-col items-center gap-2">
+                <div class="w-10 h-10 bg-surface-container-high rounded-full flex items-center justify-center text-on-surface-variant">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                </div>
+                <p class="text-xs font-bold text-on-surface-variant uppercase tracking-wide">Trazabilidad</p>
+                <p class="text-xs text-outline font-semibold">Auditoría corporativa</p>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}

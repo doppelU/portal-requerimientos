@@ -1,0 +1,218 @@
+{% extends "layout.html" %}
+{% set active = 'crear' %}
+{% block title %}Políticas de Navegación — Portal SIP{% endblock %}
+
+{% block content %}
+<div class="fade-in">
+    <div class="p-12 max-w-5xl mx-auto w-full">
+        <nav class="flex items-center gap-2 text-sm text-on-surface-variant font-semibold mb-8">
+            <a href="/categories" class="hover:text-primary transition-colors">Dashboard</a>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"/>
+            </svg>
+            <span class="text-primary font-bold">Políticas de Navegación</span>
+        </nav>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12">
+
+            <!-- Formulario principal -->
+            <div class="lg:col-span-8">
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-primary mb-2">Cambio de Política de Navegación</h1>
+                    <p class="text-on-surface-variant">Complete los detalles para actualizar las políticas de acceso web en su institución.</p>
+                </div>
+
+                <div class="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+                    <div class="bg-surface-container-low px-6 py-4 border-b border-outline-variant">
+                        <span class="text-xs font-bold text-primary uppercase tracking-widest">Información del Caso</span>
+                    </div>
+
+                    <form id="form-navegacion" action="/submit/navegacion" method="POST" class="p-8 space-y-6" novalidate>
+
+                        <!-- Colegio -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-on-surface">COLEGIO</label>
+                            {% if colegios | length == 1 %}
+                                <input type="text" class="form-input bg-surface-container-low cursor-not-allowed"
+                                       value="{{ colegios[0] }}" readonly>
+                                <input type="hidden" name="colegio" value="{{ colegios[0] }}">
+                                <p class="text-xs italic text-on-surface-variant flex items-center gap-1">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                                    </svg>
+                                    Detectado automáticamente desde tu cuenta institucional
+                                </p>
+                            {% else %}
+                                <select name="colegio" class="form-select" required>
+                                    <option value="">Seleccione un establecimiento</option>
+                                    {% for c in colegios %}
+                                    <option value="{{ c }}">{{ c }}</option>
+                                    {% endfor %}
+                                </select>
+                                {% if colegios | length > 1 %}
+                                <p class="text-xs italic text-on-surface-variant">Tienes acceso a múltiples establecimientos</p>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+
+                        <!-- MAC Address -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-on-surface">DIRECCIÓN MAC</label>
+                            <input type="text" id="mac-input" name="mac"
+                                   class="form-input" style="font-family: monospace;"
+                                   placeholder="00:00:00:00:00:00"
+                                   maxlength="17"
+                                   autocomplete="off"
+                                   required>
+                            <div id="mac-error" class="hidden flex items-center gap-1 text-red-500 text-xs font-medium">
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                                </svg>
+                                Formato inválido. Usa XX:XX:XX:XX:XX:XX (hexadecimal)
+                            </div>
+                            <p class="text-xs italic text-on-surface-variant">Identificador único del hardware del dispositivo.</p>
+                        </div>
+
+                        <!-- Política de navegación -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-on-surface">POLÍTICA DE NAVEGACIÓN</label>
+                            <select name="politica" class="form-select" required>
+                                <option value="">Seleccione una política de acceso</option>
+                                {% for p in politicas %}
+                                <option value="{{ p }}">{{ p }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Descripción opcional -->
+                        <div class="space-y-2">
+                            <label class="block text-sm font-bold text-on-surface">DESCRIPCIÓN ADICIONAL <span class="font-normal text-on-surface-variant normal-case">(opcional)</span></label>
+                            <textarea name="descripcion" class="form-input resize-none" rows="3"
+                                      placeholder="Agrega cualquier información adicional relevante..."></textarea>
+                        </div>
+
+                        <!-- Botones -->
+                        <div class="pt-6 border-t border-outline-variant flex justify-end gap-4">
+                            <a href="/categories" class="btn-secondary">Cancelar</a>
+                            <button type="submit" class="btn-primary" id="submit-btn">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                </svg>
+                                Enviar Requerimiento
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Panel lateral -->
+            <div class="lg:col-span-4 space-y-6">
+
+                <div class="bg-white border border-outline-variant rounded-xl p-6 shadow-sm">
+                    <h3 class="text-xs font-bold text-primary uppercase tracking-widest mb-4">Estado del Servicio</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-green-500 pulse"></div>
+                                <span class="text-sm font-semibold">Servidores Red</span>
+                            </div>
+                            <span class="text-xs text-green-600 font-bold">OPERATIVO</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-green-500 pulse"></div>
+                                <span class="text-sm font-semibold">Filtrado Web</span>
+                            </div>
+                            <span class="text-xs text-green-600 font-bold">OPERATIVO</span>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-outline-variant flex items-center gap-2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#757683" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                        </svg>
+                        <p class="text-xs text-on-surface-variant">Tiempo estimado: <strong>24 - 48 hrs hábiles</strong></p>
+                    </div>
+                </div>
+
+                <div class="bg-primary-container rounded-xl p-6 shadow-lg relative overflow-hidden">
+                    <div class="relative z-10">
+                        <svg class="mb-4 text-on-primary-container" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#7d98f6" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        <h4 class="text-lg font-bold text-on-primary-container mb-2">¿Necesitas ayuda?</h4>
+                        <p class="text-sm text-on-primary-container opacity-80 leading-relaxed">
+                            Si tienes dudas sobre qué política aplicar, consulta nuestra guía de navegación institucional.
+                        </p>
+                        <a href="https://sip.freshdesk.com/support/home" target="_blank" class="mt-4 text-on-primary-container font-bold hover:underline flex items-center gap-1 text-sm">
+                            Ver documentación
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/>
+                            </svg>
+                        </a>
+                    </div>
+                    <div class="absolute -right-6 -bottom-6 opacity-10">
+                        <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="bg-white border border-outline-variant rounded-xl overflow-hidden shadow-sm">
+                    <div class="px-4 py-3 bg-surface-container-low border-b border-outline-variant">
+                        <h3 class="text-xs font-bold text-primary uppercase tracking-widest">Preguntas Frecuentes</h3>
+                    </div>
+                    <div class="divide-y divide-outline-variant">
+                        <a href="https://sip.freshdesk.com/support/home" target="_blank" class="p-4 flex items-center justify-between hover:bg-surface-container-low cursor-pointer transition-colors group">
+                            <span class="text-sm font-semibold text-on-surface-variant">¿Cómo encontrar mi MAC?</span>
+                            <svg class="text-outline-variant group-hover:translate-x-1 transition-transform" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </a>
+                        <a href="https://sip.freshdesk.com/support/home" target="_blank" class="p-4 flex items-center justify-between hover:bg-surface-container-low cursor-pointer transition-colors group">
+                            <span class="text-sm font-semibold text-on-surface-variant">Diferencias entre políticas</span>
+                            <svg class="text-outline-variant group-hover:translate-x-1 transition-transform" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+const macInput = document.getElementById('mac-input');
+const macError = document.getElementById('mac-error');
+const MAC_RE = /^([0-9A-Fa-f]{2}[:\-]){5}[0-9A-Fa-f]{2}$/;
+
+macInput.addEventListener('input', function() {
+    const raw = this.value.replace(/[^0-9A-Fa-f]/g, '');
+    const formatted = raw.match(/.{1,2}/g)?.join(':') || raw;
+    if (formatted !== this.value && formatted.length <= 17) {
+        this.value = formatted;
+    }
+    if (this.value.length > 0) {
+        const valid = MAC_RE.test(this.value);
+        this.classList.toggle('error', !valid && this.value.length >= 17);
+        macError.classList.toggle('hidden', valid || this.value.length < 17);
+    } else {
+        this.classList.remove('error');
+        macError.classList.add('hidden');
+    }
+});
+
+document.getElementById('form-navegacion').addEventListener('submit', function(e) {
+    if (!MAC_RE.test(macInput.value)) {
+        e.preventDefault();
+        macInput.classList.add('error');
+        macError.classList.remove('hidden');
+        macInput.focus();
+        return;
+    }
+    const btn = document.getElementById('submit-btn');
+    btn.innerHTML = '<svg class="spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Enviando...';
+    btn.disabled = true;
+});
+</script>
+{% endblock %}
