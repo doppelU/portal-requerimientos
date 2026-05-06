@@ -16,10 +16,8 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "dev-secret-key-cambiar-en-produccion")
 
-# Necesario para que Flask detecte HTTPS correctamente detrás de Cloud Run
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# Configuración de cookies de sesión para Cloud Run
 app.config.update(
     SESSION_COOKIE_SECURE=True,
     SESSION_COOKIE_HTTPONLY=True,
@@ -129,10 +127,17 @@ def get_callback_url():
     return url_for("callback", _external=True)
 
 def make_flow(state=None):
+    """
+    Crea el flow OAuth2.
+    code_verifier=None desactiva PKCE explícitamente —
+    Google lo activa automáticamente en clientes nuevos pero
+    nuestro backend no puede mantener el verifier entre requests.
+    """
     kwargs = {"scopes": SCOPES}
     if state:
         kwargs["state"] = state
-    return Flow.from_client_config(
+
+    flow = Flow.from_client_config(
         {
             "web": {
                 "client_id": GOOGLE_CLIENT_ID,
@@ -144,6 +149,9 @@ def make_flow(state=None):
         },
         **kwargs,
     )
+    # Desactivar PKCE explícitamente
+    flow.code_verifier = None
+    return flow
 
 # ---------------------------------------------------------------------------
 # AUTH
@@ -168,6 +176,7 @@ def login_google():
         access_type="offline",
         hd=ALLOWED_DOMAIN,
         prompt="select_account",
+        code_challenge_method=False,  # Desactivar PKCE en la URL de autorización
     )
     session["oauth_state"] = state
     print(f"[LOGIN] state={state} callback_url={get_callback_url()}")
@@ -204,7 +213,7 @@ def callback():
         if not credentials or not credentials.token:
             raise Exception("credentials vacías después de fetch_token")
 
-        print(f"[CALLBACK] token obtenido OK")
+        print("[CALLBACK] token obtenido OK")
 
         id_info = id_token.verify_oauth2_token(
             credentials.id_token,
