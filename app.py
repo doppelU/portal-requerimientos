@@ -380,11 +380,11 @@ def submit_general():
         "email": user["email"],
         "type": tipo_map.get(categoria, "Incidencia"),
         "priority": 1, "status": 2,
-        "custom_fields": {
+        "custom_fields": {k: v for k, v in {
             "cf_sistema": sistema,
             "cf_tipo_de_requerimiento": tipo,
             "cf_detalle": detalle,
-        },
+        }.items() if v},
     }
 
     resp = requests.post(

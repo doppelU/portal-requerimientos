@@ -12,7 +12,7 @@
             </a>
         </div>
 
-        <nav class="flex-1 px-2 py-4 flex flex-col gap-1">
+        <nav class="flex-1 px-2 py-4 flex flex-col gap-1 overflow-y-auto">
             <a href="/categories" class="nav-item {% if active == 'dashboard' %}active{% endif %}">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
@@ -20,11 +20,45 @@
                 </svg>
                 Dashboard
             </a>
-            <a href="https://sip.freshdesk.com" target="_blank" class="nav-item">
+            <a href="https://sip.freshdesk.com/support/tickets" target="_blank" class="nav-item">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
                 </svg>
                 Historial de Tickets
+            </a>
+
+            <p class="text-xs font-bold text-on-surface-variant opacity-50 uppercase tracking-widest px-3 pt-4 pb-1">Solicitudes</p>
+
+            <a href="/form/soporte" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+                </svg>
+                Soporte Técnico
+            </a>
+            <a href="/form/navegacion" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                </svg>
+                Política de Navegación
+            </a>
+            <a href="/form/datos" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                </svg>
+                Datos y Reportes
+            </a>
+            <a href="/form/sistemas" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/>
+                    <line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+                </svg>
+                Aplicaciones y Sistemas
+            </a>
+            <a href="/form/soporte" class="nav-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>
+                </svg>
+                Otros Servicios
             </a>
         </nav>
 
