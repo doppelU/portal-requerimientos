@@ -83,6 +83,7 @@ POLITICAS_NAVEGACION = [
     "Colegio - Administradores", "Colegio - Secretarias", "Colegio - Inspectores",
     "Colegio - Laboratorios", "Colegio - Docentes Chromebook",
     "SIP - Central", "SIP - Asesores", "Colegio - Alumnos", "Colegio - Administrativos",
+    "Colegio - TP Alumnos", "Colegio - Impresoras",
     "Blocked",
 ]
 
