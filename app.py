@@ -84,7 +84,7 @@ POLITICAS_NAVEGACION = [
     "Colegio - Laboratorios", "Colegio - Docentes Chromebook",
     "SIP - Central", "SIP - Asesores", "Colegio - Alumnos", "Colegio - Administrativos",
     "Colegio - TP Alumnos", "Colegio - Impresoras",
-    "Blocked",
+    "blocked",
 ]
 
 SISTEMAS = {
